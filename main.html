@@ -1,0 +1,99 @@
+<!-- Visualization SemB 2018 Final Project made by:
+Amar Moriya
+Fishman Stas
+Koifman Roman
+-->
+
+
+<!-- References
+    WorldMap with zoom slider based on http://bl.ocks.org/nivas8292/bec8b161587cb62e9fda 
+    Time Slider based on d3 slider http://bl.ocks.org/cmdoptesc/fc0e318ce7992bed7ca8 
+-->
+
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+
+    <!-- Style sheets -->
+    <link rel="stylesheet" type="text/css" href="css/main.css" />
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="css/d3.slider.css" />
+
+    <!-- Libraries -->
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script type="text/javascript" src="js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="js/d3.v3.min.js"></script>
+    <script type="text/javascript" src="js/topojson.min.js"></script>
+    <script type="text/javascript" src="js/d3.slider.js"></script>
+    <script type="text/javascript" src="js/moment.min.js"></script>
+
+    <title>Natural Disasters</title>
+</head>
+
+<body unselectable="on" class="unselectable">
+    <div id="title">
+        <center>
+            <h1 id="yearsNumTitle">yearsNum</h1>
+            <h1>&nbsp;years of natural disasters</h1>
+        </center>
+    </div>
+    <!-- Legend -->
+    <div id="map">
+        <table id="legend">
+            <tr>
+                <td>
+                    <font color="brown">&nbsp;Earthquakes&nbsp;</font>
+                </td>
+                <td>
+                    <input type="checkbox" id="cb-1" onclick="parseAll()"  disabled/>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <font color="Blue">&nbsp;Tsunami&nbsp;</font>
+                </td>
+                <td>
+                    <input type="checkbox" id="cb-2" onclick="parseAll()" disabled/>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <font color="Grey">&nbsp;Tropical Cyclone&nbsp;</font>
+                </td>
+                <td>
+                    <input type="checkbox" id="cb-3" onclick="parseAll()" disabled/>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <font color="Red">&nbsp;Volcanic Eruption&nbsp;</font>
+                </td>
+                <td>
+                    <input type="checkbox" id="cb-4" onclick="parseAll()" disabled/>
+                </td>
+            </tr>
+        </table>
+        <!-- Zoom Buttons group -->
+        <div class="btn-group-vertical" role="group" aria-label="..." id="float-button-group">
+            <button type="button" class="btn btn-default" id="zoom-in">
+                <span class="glyphicon glyphicon-zoom-in" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="btn btn-default" id="zoom-out">
+                <span class="glyphicon glyphicon-zoom-out" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="btn btn-default" id="reset">
+                <span class="glyphicon glyphicon-screenshot" aria-hidden="true"></span>
+            </button>
+        </div>
+        <input type="range" value="1" min="1" max="8" orient="vertical" id="map-zoomer" />
+        <!-- Time Slider -->
+        <div id="time-slider"></div>
+    </div>
+    <!-- Load our project's logics -->
+    <script type="text/javascript" src="js/main.js"></script>
+
+</body>
+
+</html>

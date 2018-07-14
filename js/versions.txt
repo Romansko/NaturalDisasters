@@ -1,0 +1,5 @@
+bootstrap - v3.3.4
+topojson - v0
+moment - v 2.22.2
+jQuery - 3.3.1
+d3 v3

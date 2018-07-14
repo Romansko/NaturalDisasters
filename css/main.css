@@ -1,0 +1,127 @@
+/* Document contains main style for the project */
+        
+        /* Style for center tag */
+        center{
+            text-align: center;
+        }
+
+        /* title */
+        h1{
+            display: inline-block;
+            font-weight: bold;
+        }
+
+        /* the map */
+        path {
+            stroke: white;
+            stroke-width: 0.5px;
+            fill: #EBEBE0;
+        }
+        
+        /* map buttons */
+        #float-button-group {
+            position: absolute;
+            left: 10.5vw;
+            opacity: 0.5;
+            top: 13vh;
+        }
+
+        #float-button-group:hover {
+            opacity: 1;
+        }
+
+        #map-zoomer {
+            position: absolute;
+            writing-mode: vertical-lr;
+            -webkit-appearance: slider-vertical;
+            width: 8vw;
+            height: 15vh;
+            top: 28vh;
+            left: 8vw;
+        }
+
+        #map {
+            display: flex;
+            justify-content: center;
+            background: skyblue;
+            width: 80vw;
+            height: 80vh;
+            border: 3px solid steelblue;
+            margin: 0 auto;
+        }
+
+        #svg-map
+        {
+            width: 80vw;
+            height: 78vh;
+        }
+
+  
+        /* year slider */
+        #time-slider {
+            position: absolute;
+            writing-mode: horizontal-tb;
+            -webkit-appearance: slider-horizontal;
+            bottom: 9.5vh;
+            width: 75vw;
+            margin: auto;
+        }
+
+        /* Style for tooltip class */
+        .tooltip {                          
+            display: inline-block;
+            background-color: #FFF4D3;
+            color: black;
+            border-radius: 6px;
+            border-style: ridge;
+            z-index: 1;
+        }
+
+        /* Style for dot class */
+        .dot {
+            stroke: black;
+            stroke-width: 0.03%;
+        }
+
+        
+        /* Legend table style */
+        #legend {
+            position:absolute;
+            right:11vw;
+            top:13vh;
+            text-align: right;
+            border-style: groove;
+            background-color: lightgrey;
+            opacity: 0.8;
+        }
+  
+        td {
+            white-space: nowrap;
+            font-weight: bold;
+        }
+
+        #cb-1:focus{
+            outline: 1px ridge brown;
+        }
+        #cb-2:focus{
+            outline: 1px ridge blue;
+        }
+        #cb-3:focus{
+            outline: 1px ridge grey;
+        }
+        #cb-4:focus{
+            outline: 1px ridge red;
+        }
+        
+        /* make text unselectable */
+        *.unselectable {
+            -moz-user-select: -moz-none;
+            -khtml-user-select: none;
+            -webkit-user-select: none;
+         
+            /*Introduced in IE 10.*/
+            -ms-user-select: none;
+            user-select: none;
+         }
+
+        

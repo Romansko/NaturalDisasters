@@ -1,0 +1,15 @@
+This txt file describes the origin of the data.
+
+Earthquakes catalog has been taken from:
+ https://earthquake.usgs.gov/earthquakes/search/
+ https://www.kaggle.com/usgs/earthquake-database
+
+Tsunami data taken from: (Must register to data.world in order to view)
+ https://data.world/dhs/historical-tsunami-event/workspace/file?filename=Historical_Tsunami_Event_Locations_with_Runups.csv
+
+Trohpical cyclones data taken from:
+https://www.kaggle.com/noaa/hurricane-database
+ 
+volcanic data taken from:
+ https://www.ngdc.noaa.gov/nndc/servlet/ShowDatasets?dataset=102557&search_look=50&display_look=50
+ 
