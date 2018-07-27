@@ -341,7 +341,7 @@ var zoom = d3.behavior.zoom()
         g.selectAll("path")
             .attr("d", path.projection(projection));
         svg.selectAll(".dot")
-            .attr("transform", "translate(" + d3.event.translate.join(",") + ") scale(" + d3.event.scale + ")")
+            .attr("transform", "translate(" + translation + ") scale(" + d3.event.scale + ")")
             .transition()
             .attr("r", function (d) { return d.Severity / zoom.scale(); });
         d3.select("#map-zoomer").node().value = zoom.scale();
