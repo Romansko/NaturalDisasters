@@ -10,6 +10,10 @@
             display: inline-block;
             font-weight: bold;
         }
+        type{
+            font-weight: bold;
+            text-decoration: underline;
+        }
 
         /* the map */
         path {
@@ -18,12 +22,17 @@
             fill: #EBEBE0;
         }
         
+        g{
+            width: 100%;
+            height: 100%;
+        }
+
         /* map buttons */
         #float-button-group {
             position: absolute;
-            left: 10.5vw;
+            left: 5;
             opacity: 0.5;
-            top: 13vh;
+            top: 5;
         }
 
         #float-button-group:hover {
@@ -34,37 +43,40 @@
             position: absolute;
             writing-mode: vertical-lr;
             -webkit-appearance: slider-vertical;
-            width: 8vw;
-            height: 15vh;
-            top: 28vh;
-            left: 8vw;
+            width: 5;
+            height: 100;
+            top: 100;
+            left: 20;
         }
 
+        body{
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: auto;
+            height: auto;
+          }
         #map {
-            display: flex;
+            position: relative;
             justify-content: center;
             background: skyblue;
-            width: 80vw;
-            height: 80vh;
+            width: 90%;
+            height: 80%;
             border: 3px solid steelblue;
             margin: 0 auto;
         }
-
-        #svg-map
-        {
-            width: 80vw;
-            height: 78vh;
+        #svg-map{
+            width: 100%;
+            height: 100%;
         }
-
   
         /* year slider */
         #time-slider {
             position: absolute;
             writing-mode: horizontal-tb;
-            -webkit-appearance: slider-horizontal;
-            bottom: 9.5vh;
-            width: 75vw;
-            margin: auto;
+            bottom: -8;
+            width: 95%;
         }
 
         /* Style for tooltip class */
@@ -87,8 +99,8 @@
         /* Legend table style */
         #legend {
             position:absolute;
-            right:11vw;
-            top:13vh;
+            right: 5;
+            top:5;
             text-align: right;
             border-style: groove;
             background-color: lightgrey;

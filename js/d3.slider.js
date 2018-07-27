@@ -151,7 +151,7 @@
           if (typeof axis === "boolean") {
 
             axis = d3.svg.axis()
-              .ticks(Math.round(sliderLength / 30))
+              .ticks(Math.round(sliderLength / 35))
               .tickFormat(tickFormat)
               .orient((orientation === "horizontal") ? "bottom" : "right");
 

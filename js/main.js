@@ -8,33 +8,31 @@ var minYear = 1918, maxYear = 2018;     // Define years range for the time slide
 var currentYear = minYear;              // The curent pointed year.
 var comboboxes;                         // Legend's combobox group.
 var dateStringFormat = "DD/MM/YYYY";
-
-
-/* on resize */
-$(window).resize(function () {
-    width = d3.select('#map').node().getBoundingClientRect().width;
+var width = d3.select('#map').node().getBoundingClientRect().width,
     height = d3.select('#map').node().getBoundingClientRect().height;
-    buildTimeSlider();
+
+/* reload page on rise - to fix broken sized map */
+$(window).resize(function () {
+    location.reload(true);
 });
 
 var tooltip = d3.select("body").append("div").attr("class", "tooltip");        // create tooltip div
-var svg = d3.select("#map")
-    .append("svg")
-    .attr("id", 'svg-map')
+
+var center = [width / 2, height / 2];
+var projection = d3.geo.equirectangular().scale(height / Math.PI).translate(center);
+var path = d3.geo.path().projection(projection);
+var svg = d3.select("#map").append("svg").attr("id", 'svg-map');
 var g = svg.append("g");
 
-var path, projection, center, width, height;
 /* Read world map json and draw the map */
-d3.json("data/world-110m2.json", function (error, topology) {
-    center = [10, 45];
-    projection = d3.geo.mercator().scale(130).center(center);
-    path = d3.geo.path().projection(projection);
+d3.json("data/world-110m.json", function (error, topology) {
     g.selectAll("path")
         .data(topojson.object(topology, topology.objects.countries).geometries)
         .enter()
         .append("path")
         .attr("d", path);
 });
+
 
 /**
  * Class Phenomenon
@@ -57,6 +55,7 @@ function Phenomenon(type, color, date, time, severity, longitude, latitude) {
         throw err;
     }
 }
+
 
 /* Enable ToolTip */
 function enableToolTip(text, color) {
@@ -218,7 +217,6 @@ $(document).ready(function () {
             console.log(error);
             return;
         }
-
         volcan = [];
         // todo: calculate severity (understand by houses destroyed, deaths, etc..)
         vScale = d3.scale.linear().domain([1, 10]).range([3, 10]);
@@ -226,7 +224,6 @@ $(document).ready(function () {
             var s = 3.0;        // todo: calculate severity (understand by houses destroyed, deaths, etc..)
             var lon = parseFloat(v.Longitude);
             var lat = parseFloat(v.Latitude);
-
             if (!isNaN(s) && !isNaN(lon) && !isNaN(lat)) {
 
                 var timeStr = volcans.time;
@@ -243,8 +240,9 @@ $(document).ready(function () {
 
 
 var filtered;               // filtered phenomena by year and check box.
-function parseAll() {
+async function parseAll() {
     svg.selectAll(".dot").remove();
+
     filtered = [];
     naturalDisasters = [];
     /* Filter checked phenomena */
@@ -278,8 +276,10 @@ function parseAll() {
         .style("fill", function (d) { return d.Color; })
         .on("mouseover", function (d) {
             d3.select(this).style("fill", d3.rgb(d.Color).darker(2));
-            var text = "<b><u>" + d.Type + "</u></b><br/>" + "Date: " + d.Date +
-                "<br/>" + "Time: " + d.Time + "<br/>" + "Severity: " + d.Severity.toFixed(2);
+            var text = "<type><font color=\"" + d.Color + "\">" + d.Type + "</font></type>";
+            if (d.Date != undefined) text += "<br/>Date: " + d.Date;
+            if (d.Time != undefined) text += "<br/>Time: " + d.Time;
+            text += "<br/>Severity: " + d.Severity.toFixed(2);
             enableToolTip(text, d.Color);
         })
         .on("mouseout", function (d) {
@@ -321,9 +321,23 @@ function buildTimeSlider() {
 /*********************************** Map ZooM and drag handling *******************************/
 
 var zoom = d3.behavior.zoom()
-    .scaleExtent([1, 8])
+    .scaleExtent([1, 10])
     .on("zoom", function () {
-        g.attr("transform", "translate(" + d3.event.translate.join(",") + ") scale(" + d3.event.scale + ")");
+        var scale = d3.event.scale;
+        var h = height * scale;
+        var w = width * scale;
+        var padding = 0;
+        var translation = d3.event.translate;
+        var tbound = -(h - height) - padding;
+        var bbound = padding;
+        var lbound = -(w - width) - padding;
+        var rbound = padding;
+        translation = [
+            Math.max(Math.min(translation[0], rbound), lbound),
+            Math.max(Math.min(translation[1], bbound), tbound)
+        ];
+
+        g.attr("transform", "translate(" + translation + ") scale(" + d3.event.scale + ")");
         g.selectAll("path")
             .attr("d", path.projection(projection));
         svg.selectAll(".dot")
