@@ -311,14 +311,14 @@ function buildTimeSlider() {
         .axis(true).min(minYear).max(maxYear).step(1)
         .on("slide", function (evt, value) {
             currentYear = value;
+            enableToolTip(currentYear);
         })
         .on("slideend", function () {
+            disableToolTip();
             parseAll();
             $("#current-year").text("Viewing Year: " + currentYear);
         })
     );
-    d3.select('#time-slider').on("mouseover", function () { enableToolTip(currentYear); })
-        .on("mouseout", disableToolTip);
 }
 
 

@@ -94,8 +94,7 @@
         // Horizontal slider
         if (orientation === "horizontal") {
 
-          // commented out because we want to disable clicking on slider.
-          //  div.on("click", onClickHorizontal);  
+          div.on("click", onClickHorizontal);
 
           if (toType(value) == "array" && value.length == 2) {
             divRange = d3.select(this).append('div').classed("d3-slider-range", true);
@@ -115,6 +114,24 @@
           }
 
           sliderLength = parseInt(div.style("width"), 10);
+          d3.select(".d3-slider-handle")
+            .on("mouseover", function () {
+              enableToolTip(value);
+              stopPropagation();
+            })
+            .on("mouseout", function () {
+              disableToolTip();
+            });
+          div.on("mouseover", function () {
+            var pos = Math.max(0, Math.min(sliderLength, d3.event.offsetX || d3.event.layerX));
+            enableToolTip(scale.invert ?
+              stepValue(scale.invert(pos / sliderLength))
+              : nearestTick(pos / sliderLength));
+          });
+          div.on("mouseout", function () {
+            disableToolTip();
+          });
+
 
         } else { // Vertical
 
@@ -206,6 +223,26 @@
 
           g.call(axis);
 
+        }
+        /* Enable ToolTip */
+        function enableToolTip(text, color) {
+          if (color == undefined)
+            color = "darkgreen";
+          tooltip.style("border-color", color);
+          tooltip.transition()
+            .style("border-color", color)
+            .duration(300)
+            .style("opacity", .9);
+          tooltip.html("<b>" + text + "</b>")
+            .style("left", (d3.event.pageX + 5) + "px")
+            .style("top", (d3.event.pageY - 28) + "px");
+        }
+        /* Disable ToolTip */
+        function disableToolTip() {
+          tooltip.transition()
+            .duration(500)
+            .style("opacity", 0)
+            .style("border-color", "darkblue");
         }
 
         function onClickHorizontal() {
@@ -347,7 +384,6 @@
           index = i;
         };
       } while (dist[i] > 0 && i < dist.length - 1);
-
       return ticks[index];
     };
 
