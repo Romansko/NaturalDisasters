@@ -306,6 +306,7 @@ async function parseAll() {
 /* Build time slider */
 function buildTimeSlider() {
     $('#time-slider').empty();
+    $('#time-slider').append("<div id=\"current-year\">Viewing Year: " + minYear + "</div>");
     d3.select('#time-slider').call(d3.slider()
         .axis(true).min(minYear).max(maxYear).step(1)
         .on("slide", function (evt, value) {
@@ -313,9 +314,10 @@ function buildTimeSlider() {
         })
         .on("slideend", function () {
             parseAll();
+            $("#current-year").text("Viewing Year: " + currentYear);
         })
     );
-    d3.select('#time-slider').on("mouseover", function () { enableToolTip("Current: " + currentYear); })
+    d3.select('#time-slider').on("mouseover", function () { enableToolTip(currentYear); })
         .on("mouseout", disableToolTip);
 }
 

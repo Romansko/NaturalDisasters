@@ -64,7 +64,7 @@
             width: 90%;
             height: 80%;
             border: 3px solid steelblue;
-            margin: 0 auto;
+            margin:0 auto;
         }
         #svg-map{
             width: 100%;
@@ -73,12 +73,24 @@
   
         /* year slider */
         #time-slider {
-            position: absolute;
             writing-mode: horizontal-tb;
-            bottom: -8;
+            background-color: darkgreen;
+            bottom: -4;
+            right: 2.5%;
             width: 95%;
         }
 
+        #current-year {
+            position:absolute;
+            display:inline;
+            font-weight: bold;
+            font-size: 12px;
+            border-style: groove;
+            background-color: lightgrey;
+            bottom: 8px;
+            right: 45%;
+        }
+        
         /* Style for tooltip class */
         .tooltip {                          
             display: inline-block;
