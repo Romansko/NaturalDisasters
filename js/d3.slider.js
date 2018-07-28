@@ -117,7 +117,6 @@
           d3.select(".d3-slider-handle")
             .on("mouseover", function () {
               enableToolTip(value);
-              stopPropagation();
             })
             .on("mouseout", function () {
               disableToolTip();
@@ -236,6 +235,7 @@
           tooltip.html("<b>" + text + "</b>")
             .style("left", (d3.event.pageX + 5) + "px")
             .style("top", (d3.event.pageY - 28) + "px");
+            stopPropagation();
         }
         /* Disable ToolTip */
         function disableToolTip() {
@@ -243,6 +243,7 @@
             .duration(500)
             .style("opacity", 0)
             .style("border-color", "darkblue");
+            stopPropagation();
         }
 
         function onClickHorizontal() {

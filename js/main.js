@@ -54,7 +54,7 @@ function Phenomenon(type, color, date, time, severity, longitude, latitude) {
     this.Severity = parseFloat(severity);
     this.Longitude = parseFloat(longitude);
     this.Latitude = parseFloat(latitude);
-    if (isNaN(this.Severity) || isNaN(this.Longitude) || isNaN(this.Latitude)) {
+    if (isNaN(this.Severity) || isNaN(this.Longitude) || isNaN(this.Latitude) || this.Severity < 0) {
         var err = "Bad Parameters: " + this.Severity + ", " + this.Longitude + ", " + this.Latitude;
         console.log(err);
         throw err;
@@ -83,14 +83,20 @@ function disableToolTip() {
         .style("border-color", "darkblue");
 }
 
+
+// Global arrays for Phenomenon and thier scales.
 var naturalDisasters, earthquakes, tsunami, cyclone, volcan;
 var eqScale, cScale, tScale, vScale;
-/* Initialization function - when document fully loaded */
+/**
+ * Initialization function - happens once whe document fully loaded .
+ * This is where we read our datasets.s
+ * */
 $(document).ready(function () {
-    drawMap();
+    drawMap();      // draw map by topojson.
     $('#yearsNumTitle').text(maxYear - minYear);
     buildTimeSlider();
     comboboxes = [$("#cb-1"), $("#cb-2"), $("#cb-3"), $("#cb-4")];
+
     /* Parse Earthquakes Data */
     d3.csv("data/earthquakes.csv", async function (error, eqs) {
         if (error != null) {
@@ -131,6 +137,7 @@ $(document).ready(function () {
         });
     }); // parse earthquakes
 
+    /* Parse Tsunami data */
     d3.csv("data/tsunami.csv", async function (error, ts) {
         if (error != null) {
             console.log(error);
@@ -154,6 +161,7 @@ $(document).ready(function () {
         comboboxes[1].prop("disabled", false);
     }); // parse tsunami.
 
+    /* Parse cyclone data */
     d3.csv("data/pacific.csv", async function (error, ts) {
         if (error != null) {
             console.log(error);
@@ -190,13 +198,13 @@ $(document).ready(function () {
                 return;
             }
             max = Math.max(max, d3.max(ts, function (d) { return d["Maximum Wind"]; }));
-            min = Math.min(d3.min(ts, function (d) { return d["Maximum Wind"]; }));
+            min = Math.min(min, d3.min(ts, function (d) { return d["Maximum Wind"]; }));
             cScale = d3.scale.linear().domain([min, max]).range([1, 5]);
             ts2.forEach(function (t) {
                 var s = parseFloat(t["Maximum Wind"]);
                 var lon = parseFloat(t.Longitude.replace("W", ""));
                 var lat = parseFloat(t.Latitude.replace("N", ""));
-                if (!isNaN(s) && !isNaN(lon) && !isNaN(lat)) {
+                if (!isNaN(s) && !isNaN(lon) && !isNaN(lat) && s > 0) {
                     var timeStr;
                     switch (t.Time.length) {
                         case 4:
@@ -215,22 +223,25 @@ $(document).ready(function () {
             });
             comboboxes[2].prop("disabled", false);
         });
-    });
+    });     // cyclone data
 
+    /* Parse volcanic erruptions data*/
     d3.csv("data/volcan.csv", async function (error, volcans) {
         if (error != null) {
             console.log(error);
             return;
         }
         volcan = [];
-        // todo: calculate severity (understand by houses destroyed, deaths, etc..)
-        vScale = d3.scale.linear().domain([1, 10]).range([3, 10]);
+        var max = d3.max(volcans, function (d) { return d.TOTAL_DEATHS; });
+        var min = d3.min(volcans, function (d) { return d.TOTAL_DEATHS; });
+        vScale = d3.scale.pow().exponent(0.2).domain([min, max]).range([3, 5]);
         volcans.forEach(function (v) {
-            var s = 3.0;        // todo: calculate severity (understand by houses destroyed, deaths, etc..)
+            var s = parseFloat(v.TOTAL_DEATHS);
+            if (s == undefined || isNaN(s))     // a lot of data is undefined so we take 3 as minimum
+                s = min;
             var lon = parseFloat(v.Longitude);
             var lat = parseFloat(v.Latitude);
             if (!isNaN(s) && !isNaN(lon) && !isNaN(lat)) {
-
                 var timeStr = volcans.time;
                 var dateStr = "" + v.Day + "/" + v.Month + "/" + v.Year;
                 volcan.push(new Phenomenon("Volcanic Eruption", "red", dateStr, timeStr, vScale(s), lon, lat));
