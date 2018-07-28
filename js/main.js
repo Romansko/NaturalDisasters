@@ -8,31 +8,36 @@ var minYear = 1918, maxYear = 2018;     // Define years range for the time slide
 var currentYear = minYear;              // The curent pointed year.
 var comboboxes;                         // Legend's combobox group.
 var dateStringFormat = "DD/MM/YYYY";
-var width = d3.select('#map').node().getBoundingClientRect().width,
-    height = d3.select('#map').node().getBoundingClientRect().height;
 
-/* reload page on rise - to fix broken sized map */
 $(window).resize(function () {
-    location.reload(true);
+    //location.reload(true);
+    drawMap();
+    buildTimeSlider();
+    parseAll();
 });
 
 var tooltip = d3.select("body").append("div").attr("class", "tooltip");        // create tooltip div
 
-var center = [width / 2, height / 2];
-var projection = d3.geo.equirectangular().scale(height / Math.PI).translate(center);
-var path = d3.geo.path().projection(projection);
-var svg = d3.select("#map").append("svg").attr("id", 'svg-map');
-var g = svg.append("g");
-
-/* Read world map json and draw the map */
-d3.json("data/world-110m.json", function (error, topology) {
-    g.selectAll("path")
-        .data(topojson.object(topology, topology.objects.countries).geometries)
-        .enter()
-        .append("path")
-        .attr("d", path);
-});
-
+var center, projection, path, svg, g, height, width;
+function drawMap() {
+    $("#svg-map").remove();
+    width = d3.select('#map').node().getBoundingClientRect().width;
+    height = d3.select('#map').node().getBoundingClientRect().height;
+    center = [width / 2, height / 2];
+    projection = d3.geo.equirectangular().scale(height / Math.PI).translate(center);
+    path = d3.geo.path().projection(projection);
+    svg = d3.select("#map").append("svg").attr("id", 'svg-map');
+    g = svg.append("g");
+    /* Read world map json and draw the map */
+    d3.json("data/world-110m.json", async function (error, topology) {
+        g.selectAll("path")
+            .data(topojson.object(topology, topology.objects.countries).geometries)
+            .enter()
+            .append("path")
+            .attr("d", path);
+    });
+    applyZoomSettings();
+}
 
 /**
  * Class Phenomenon
@@ -82,9 +87,9 @@ var naturalDisasters, earthquakes, tsunami, cyclone, volcan;
 var eqScale, cScale, tScale, vScale;
 /* Initialization function - when document fully loaded */
 $(document).ready(function () {
-    width = d3.select('#map').node().getBoundingClientRect().width;
-    height = d3.select('#map').node().getBoundingClientRect().height;
+    drawMap();
     $('#yearsNumTitle').text(maxYear - minYear);
+    buildTimeSlider();
     comboboxes = [$("#cb-1"), $("#cb-2"), $("#cb-3"), $("#cb-4")];
     /* Parse Earthquakes Data */
     d3.csv("data/earthquakes.csv", async function (error, eqs) {
@@ -233,9 +238,6 @@ $(document).ready(function () {
         });
         comboboxes[3].prop("disabled", false);
     }); // parse volcanic eruptions.
-
-    buildTimeSlider();
-    svg.call(zoom);
 }); // document ready
 
 
@@ -337,89 +339,92 @@ function getTranslationString(scale, translation) {
     return "translate(" + translation + ") scale(" + scale + ")";
 }
 
+var zoom;
+function applyZoomSettings() {
+    zoom = d3.behavior.zoom()
+        .scaleExtent([1, 8])
+        .on("zoom", function () {
+            g.attr("transform", getTranslationString(d3.event.scale, d3.event.translate));
+            g.selectAll("path").attr("d", path.projection(projection));
+            svg.selectAll(".dot")
+                .attr("transform", getTranslationString(d3.event.scale, d3.event.translate))
+                .transition()
+                .attr("r", function (d) { return d.Severity / d3.event.scale; });
+            d3.select("#map-zoomer").node().value = zoom.scale();
+        });
+    svg.call(zoom);
 
-var zoom = d3.behavior.zoom()
-    .scaleExtent([1, 8])
-    .on("zoom", function () {
-        g.attr("transform", getTranslationString(d3.event.scale, d3.event.translate));
+    d3.select('#zoom-in').on('click', function () {
+        var extent = zoom.scaleExtent();
+        if (zoom.scale() === extent[1]) {
+            return false;
+        }
+        zoomerFunction(1.2, extent);
+    });
+
+    d3.select('#zoom-out').on('click', function () {
+        var extent = zoom.scaleExtent();
+        if (zoom.scale() === extent[0]) {
+            return false;
+        }
+        zoomerFunction(1 / 1.2, extent);
+    });
+
+    function zoomerFunction(factor, extent) {
+        var scale = zoom.scale(), translate = zoom.translate();
+        var x = translate[0], y = translate[1];
+        var target_scale = scale * factor;
+
+        var clamped_target_scale = Math.max(extent[0], Math.min(extent[1], target_scale));
+        if (clamped_target_scale != target_scale) {
+            target_scale = clamped_target_scale;
+            factor = target_scale / scale;
+        }
+        x = (x - center[0]) * factor + center[0];
+        y = (y - center[1]) * factor + center[1];
+        zoom.scale(target_scale).translate([x, y]);
+        g.transition().attr("transform", getTranslationString(zoom.scale(), zoom.translate()));
         g.selectAll("path").attr("d", path.projection(projection));
         svg.selectAll(".dot")
-            .attr("transform", getTranslationString(d3.event.scale, d3.event.translate))
             .transition()
-            .attr("r", function (d) { return d.Severity / d3.event.scale; });
+            .attr("transform", getTranslationString(zoom.scale(), zoom.translate()))
+            .attr("r", function (d) { return d.Severity / zoom.scale(); });
+        d3.select("#map-zoomer").node().value = zoom.scale();
+    }
+
+    d3.select('#reset').on('click', function () {
+        zoom.translate([0, 0]);
+        zoom.scale(1);
+        g.transition().attr("transform", getTranslationString(zoom.scale(), zoom.translate()));
+        g.selectAll("path").attr("d", path.projection(projection))
+        svg.selectAll(".dot")
+            .transition()
+            .attr("transform", getTranslationString(zoom.scale(), zoom.translate()))
+            .transition()
+            .attr("r", function (d) { return d.Severity / zoom.scale(); });
         d3.select("#map-zoomer").node().value = zoom.scale();
     });
 
-d3.select('#zoom-in').on('click', function () {
-    var extent = zoom.scaleExtent();
-    if (zoom.scale() === extent[1]) {
-        return false;
-    }
-    zoomerFunction(1.2, extent);
-});
+    d3.select('#map-zoomer').on("change", function () {
+        var scale = zoom.scale(), extent = zoom.scaleExtent(), translate = zoom.translate();
+        var x = translate[0], y = translate[1];
+        var target_scale = +this.value;
+        var factor = target_scale / scale;
+        var clamped_target_scale = Math.max(extent[0], Math.min(extent[1], target_scale));
+        if (clamped_target_scale != target_scale) {
+            target_scale = clamped_target_scale;
+            factor = target_scale / scale;
+        }
+        x = (x - center[0]) * factor + center[0];
+        y = (y - center[1]) * factor + center[1];
+        zoom.scale(target_scale).translate([x, y]);
+        g.transition().attr("transform", getTranslationString(zoom.scale(), zoom.translate()));
+        g.selectAll("path").attr("d", path.projection(projection));
+        svg.selectAll(".dot")
+            .transition()
+            .attr("transform", getTranslationString(zoom.scale(), zoom.translate()))
+            .attr("r", function (d) { return d.Severity / zoom.scale(); });
+    });
 
-d3.select('#zoom-out').on('click', function () {
-    var extent = zoom.scaleExtent();
-    if (zoom.scale() === extent[0]) {
-        return false;
-    }
-    zoomerFunction(1 / 1.2, extent);
-});
+};  // apply zoom settings
 
-function zoomerFunction(factor, extent) {
-    var scale = zoom.scale(), translate = zoom.translate();
-    var x = translate[0], y = translate[1];
-    var target_scale = scale * factor;
-
-    var clamped_target_scale = Math.max(extent[0], Math.min(extent[1], target_scale));
-    if (clamped_target_scale != target_scale) {
-        target_scale = clamped_target_scale;
-        factor = target_scale / scale;
-    }
-    x = (x - center[0]) * factor + center[0];
-    y = (y - center[1]) * factor + center[1];
-    zoom.scale(target_scale).translate([x, y]);
-    g.transition().attr("transform", getTranslationString(zoom.scale(), zoom.translate()));
-    g.selectAll("path").attr("d", path.projection(projection));
-    svg.selectAll(".dot")
-        .transition()
-        .attr("transform", getTranslationString(zoom.scale(), zoom.translate()))
-        .attr("r", function (d) { return d.Severity / zoom.scale(); });
-    d3.select("#map-zoomer").node().value = zoom.scale();
-}
-
-d3.select('#reset').on('click', function () {
-    zoom.translate([0, 0]);
-    zoom.scale(1);
-    g.transition().attr("transform", getTranslationString(zoom.scale(), zoom.translate()));
-    g.selectAll("path").attr("d", path.projection(projection))
-    svg.selectAll(".dot")
-        .transition()
-        .attr("transform", getTranslationString(zoom.scale(), zoom.translate()))
-        .transition()
-        .attr("r", function (d) { return d.Severity / zoom.scale(); });
-    d3.select("#map-zoomer").node().value = zoom.scale();
-});
-
-d3.select('#map-zoomer').on("change", function () {
-    var scale = zoom.scale(), extent = zoom.scaleExtent(), translate = zoom.translate();
-    var x = translate[0], y = translate[1];
-    var target_scale = +this.value;
-    var factor = target_scale / scale;
-    var clamped_target_scale = Math.max(extent[0], Math.min(extent[1], target_scale));
-    if (clamped_target_scale != target_scale) {
-        target_scale = clamped_target_scale;
-        factor = target_scale / scale;
-    }
-    x = (x - center[0]) * factor + center[0];
-    y = (y - center[1]) * factor + center[1];
-    zoom.scale(target_scale).translate([x, y]);
-    g.transition().attr("transform", getTranslationString(zoom.scale(), zoom.translate()));
-    g.selectAll("path").attr("d", path.projection(projection));
-    svg.selectAll(".dot")
-        .transition()
-        .attr("transform", getTranslationString(zoom.scale(), zoom.translate()))
-        .attr("r", function (d) { return d.Severity / zoom.scale(); });
-});
-
-/*************************** end drag / zoom logics ******************************* */
