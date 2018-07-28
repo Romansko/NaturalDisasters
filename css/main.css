@@ -87,6 +87,7 @@
             border-radius: 6px;
             border-style: ridge;
             z-index: 1;
+            padding: 2px;
         }
 
         /* Style for dot class */

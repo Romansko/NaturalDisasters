@@ -94,7 +94,8 @@
         // Horizontal slider
         if (orientation === "horizontal") {
 
-          div.on("click", onClickHorizontal);
+          // commented out because we want to disable clicking on slider.
+          //  div.on("click", onClickHorizontal);  
 
           if (toType(value) == "array" && value.length == 2) {
             divRange = d3.select(this).append('div').classed("d3-slider-range", true);

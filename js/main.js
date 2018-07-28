@@ -56,7 +56,6 @@ function Phenomenon(type, color, date, time, severity, longitude, latitude) {
     }
 }
 
-
 /* Enable ToolTip */
 function enableToolTip(text, color) {
     if (color == undefined)
@@ -79,7 +78,6 @@ function disableToolTip() {
         .style("border-color", "darkblue");
 }
 
-
 var naturalDisasters, earthquakes, tsunami, cyclone, volcan;
 var eqScale, cScale, tScale, vScale;
 /* Initialization function - when document fully loaded */
@@ -88,9 +86,8 @@ $(document).ready(function () {
     height = d3.select('#map').node().getBoundingClientRect().height;
     $('#yearsNumTitle').text(maxYear - minYear);
     comboboxes = [$("#cb-1"), $("#cb-2"), $("#cb-3"), $("#cb-4")];
-
     /* Parse Earthquakes Data */
-    d3.csv("data/earthquakes.csv", function (error, eqs) {
+    d3.csv("data/earthquakes.csv", async function (error, eqs) {
         if (error != null) {
             console.log(error);
             return;
@@ -125,10 +122,11 @@ $(document).ready(function () {
                 }
             });
             earthquakes = oldEq.concat(earthquakes);
+            comboboxes[0].prop("disabled", false);
         });
     }); // parse earthquakes
 
-    d3.csv("data/tsunami.csv", function (error, ts) {
+    d3.csv("data/tsunami.csv", async function (error, ts) {
         if (error != null) {
             console.log(error);
             return;
@@ -148,9 +146,10 @@ $(document).ready(function () {
                 tsunami.push(new Phenomenon("Tsunami", "blue", dateStr, timeStr, tScale(s), lon, lat));
             }
         });
+        comboboxes[1].prop("disabled", false);
     }); // parse tsunami.
 
-    d3.csv("data/pacific.csv", function (error, ts) {
+    d3.csv("data/pacific.csv", async function (error, ts) {
         if (error != null) {
             console.log(error);
             return;
@@ -209,10 +208,11 @@ $(document).ready(function () {
                     cyclone.push(new Phenomenon("Cyclone", "grey", dateStr, timeStr, cScale(s), lon, lat));
                 }
             });
+            comboboxes[2].prop("disabled", false);
         });
     });
 
-    d3.csv("data/volcan.csv", function (error, volcans) {
+    d3.csv("data/volcan.csv", async function (error, volcans) {
         if (error != null) {
             console.log(error);
             return;
@@ -231,11 +231,11 @@ $(document).ready(function () {
                 volcan.push(new Phenomenon("Volcanic Eruption", "red", dateStr, timeStr, vScale(s), lon, lat));
             }
         });
+        comboboxes[3].prop("disabled", false);
     }); // parse volcanic eruptions.
 
     buildTimeSlider();
     svg.call(zoom);
-    $("input").prop("disabled", false);
 }); // document ready
 
 
@@ -287,7 +287,7 @@ async function parseAll() {
             disableToolTip();
         })
         .transition()
-        .attr("transform", "translate(" + zoom.translate().join(",") + ") scale(" + zoom.scale() + ")") // align pos to map
+        .attr("transform", getTranslationString(zoom.scale(), zoom.translate())) // align pos to map
         .each("start", function () {
             d3.select(this)
                 .attr("r", 0)
@@ -313,76 +313,64 @@ function buildTimeSlider() {
             parseAll();
         })
     );
-    d3.select('#time-slider').on("mouseover", function () { enableToolTip(currentYear); })
+    d3.select('#time-slider').on("mouseover", function () { enableToolTip("Current: " + currentYear); })
         .on("mouseout", disableToolTip);
 }
 
 
 /*********************************** Map ZooM and drag handling *******************************/
 
-var zoom = d3.behavior.zoom()
-    .scaleExtent([1, 10])
-    .on("zoom", function () {
-        var scale = d3.event.scale;
-        var h = height * scale;
-        var w = width * scale;
-        var padding = 0;
-        var translation = d3.event.translate;
-        var tbound = -(h - height) - padding;
-        var bbound = padding;
-        var lbound = -(w - width) - padding;
-        var rbound = padding;
-        translation = [
-            Math.max(Math.min(translation[0], rbound), lbound),
-            Math.max(Math.min(translation[1], bbound), tbound)
-        ];
+/**
+ * Limit dragging map and circles out of bounds.
+ * Represented as translation string
+ */
+function getTranslationString(scale, translation) {
+    var h = height * scale;
+    var w = width * scale;
+    var padding = 0;
+    var tbound = -(h - height) - padding;
+    var lbound = -(w - width) - padding;
+    translation = [
+        Math.max(Math.min(translation[0], padding), lbound),
+        Math.max(Math.min(translation[1], padding), tbound)
+    ];
+    return "translate(" + translation + ") scale(" + scale + ")";
+}
 
-        g.attr("transform", "translate(" + translation + ") scale(" + d3.event.scale + ")");
-        g.selectAll("path")
-            .attr("d", path.projection(projection));
+
+var zoom = d3.behavior.zoom()
+    .scaleExtent([1, 8])
+    .on("zoom", function () {
+        g.attr("transform", getTranslationString(d3.event.scale, d3.event.translate));
+        g.selectAll("path").attr("d", path.projection(projection));
         svg.selectAll(".dot")
-            .attr("transform", "translate(" + translation + ") scale(" + d3.event.scale + ")")
+            .attr("transform", getTranslationString(d3.event.scale, d3.event.translate))
             .transition()
-            .attr("r", function (d) { return d.Severity / zoom.scale(); });
+            .attr("r", function (d) { return d.Severity / d3.event.scale; });
         d3.select("#map-zoomer").node().value = zoom.scale();
     });
 
 d3.select('#zoom-in').on('click', function () {
-    var scale = zoom.scale(), extent = zoom.scaleExtent(), translate = zoom.translate();
-    var x = translate[0], y = translate[1];
-    var factor = 1.2;
-    var target_scale = scale * factor;
-    if (scale === extent[1]) {
+    var extent = zoom.scaleExtent();
+    if (zoom.scale() === extent[1]) {
         return false;
     }
-    var clamped_target_scale = Math.max(extent[0], Math.min(extent[1], target_scale));
-    if (clamped_target_scale != target_scale) {
-        target_scale = clamped_target_scale;
-        factor = target_scale / scale;
-    }
-    x = (x - center[0]) * factor + center[0];
-    y = (y - center[1]) * factor + center[1];
-    zoom.scale(target_scale).translate([x, y]);
-    g.transition().attr("transform", "translate(" + zoom.translate().join(",") + ") scale(" + zoom.scale() + ")");
-    g.selectAll("path")
-        .attr("d", path.projection(projection));
-
-    svg.selectAll(".dot")
-        .transition()
-        .attr("transform", "translate(" + zoom.translate().join(",") + ") scale(" + zoom.scale() + ")")
-        .attr("r", function (d) { return d.Severity / zoom.scale(); });
-
-    d3.select("#map-zoomer").node().value = zoom.scale();
+    zoomerFunction(1.2, extent);
 });
 
 d3.select('#zoom-out').on('click', function () {
-    var scale = zoom.scale(), extent = zoom.scaleExtent(), translate = zoom.translate();
-    var x = translate[0], y = translate[1];
-    var factor = 1 / 1.2;
-    var target_scale = scale * factor;
-    if (scale === extent[0]) {
+    var extent = zoom.scaleExtent();
+    if (zoom.scale() === extent[0]) {
         return false;
     }
+    zoomerFunction(1 / 1.2, extent);
+});
+
+function zoomerFunction(factor, extent) {
+    var scale = zoom.scale(), translate = zoom.translate();
+    var x = translate[0], y = translate[1];
+    var target_scale = scale * factor;
+
     var clamped_target_scale = Math.max(extent[0], Math.min(extent[1], target_scale));
     if (clamped_target_scale != target_scale) {
         target_scale = clamped_target_scale;
@@ -391,27 +379,23 @@ d3.select('#zoom-out').on('click', function () {
     x = (x - center[0]) * factor + center[0];
     y = (y - center[1]) * factor + center[1];
     zoom.scale(target_scale).translate([x, y]);
-    g.transition()
-        .attr("transform", "translate(" + zoom.translate().join(",") + ") scale(" + zoom.scale() + ")");
-    g.selectAll("path")
-        .attr("d", path.projection(projection));
-
+    g.transition().attr("transform", getTranslationString(zoom.scale(), zoom.translate()));
+    g.selectAll("path").attr("d", path.projection(projection));
     svg.selectAll(".dot")
         .transition()
-        .attr("transform", "translate(" + zoom.translate().join(",") + ") scale(" + zoom.scale() + ")")
+        .attr("transform", getTranslationString(zoom.scale(), zoom.translate()))
         .attr("r", function (d) { return d.Severity / zoom.scale(); });
     d3.select("#map-zoomer").node().value = zoom.scale();
-});
+}
 
 d3.select('#reset').on('click', function () {
     zoom.translate([0, 0]);
     zoom.scale(1);
-    g.transition().attr("transform", "translate(" + zoom.translate().join(",") + ") scale(" + zoom.scale() + ")");
-    g.selectAll("path")
-        .attr("d", path.projection(projection))
+    g.transition().attr("transform", getTranslationString(zoom.scale(), zoom.translate()));
+    g.selectAll("path").attr("d", path.projection(projection))
     svg.selectAll(".dot")
         .transition()
-        .attr("transform", "translate(" + zoom.translate().join(",") + ") scale(" + zoom.scale() + ")")
+        .attr("transform", getTranslationString(zoom.scale(), zoom.translate()))
         .transition()
         .attr("r", function (d) { return d.Severity / zoom.scale(); });
     d3.select("#map-zoomer").node().value = zoom.scale();
@@ -430,14 +414,11 @@ d3.select('#map-zoomer').on("change", function () {
     x = (x - center[0]) * factor + center[0];
     y = (y - center[1]) * factor + center[1];
     zoom.scale(target_scale).translate([x, y]);
-    g.transition()
-        .attr("transform", "translate(" + zoom.translate().join(",") + ") scale(" + zoom.scale() + ")");
-    g.selectAll("path")
-        .attr("d", path.projection(projection));
-
+    g.transition().attr("transform", getTranslationString(zoom.scale(), zoom.translate()));
+    g.selectAll("path").attr("d", path.projection(projection));
     svg.selectAll(".dot")
         .transition()
-        .attr("transform", "translate(" + zoom.translate().join(",") + ") scale(" + zoom.scale() + ")")
+        .attr("transform", getTranslationString(zoom.scale(), zoom.translate()))
         .attr("r", function (d) { return d.Severity / zoom.scale(); });
 });
 
