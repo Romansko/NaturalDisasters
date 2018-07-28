@@ -11,5 +11,5 @@ Trohpical cyclones data taken from:
 https://www.kaggle.com/noaa/hurricane-database
  
 volcanic data taken from:
- https://www.ngdc.noaa.gov/nndc/servlet/ShowDatasets?dataset=102557&search_look=50&display_look=50
+https://www.ngdc.noaa.gov/nndc/servlet/ShowDatasets?dataset=102557&search_look=50&display_look=50
  

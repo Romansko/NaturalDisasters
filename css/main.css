@@ -15,13 +15,12 @@
             text-decoration: underline;
         }
 
-        /* the map */
+        /* the map (by topojson) */
         path {
             stroke: white;
             stroke-width: 0.5px;
             fill: #EBEBE0;
         }
-        
         g{
             width: 100%;
             height: 100%;
@@ -35,10 +34,10 @@
             top: 5;
         }
 
+        /* zoom buttons style */
         #float-button-group:hover {
             opacity: 1;
         }
-
         #map-zoomer {
             position: absolute;
             writing-mode: vertical-lr;
@@ -49,6 +48,7 @@
             left: 20;
         }
 
+        /* main body style */
         body{
             top: 0;
             bottom: 0;
@@ -56,7 +56,9 @@
             right: 0;
             width: auto;
             height: auto;
-          }
+         }
+         
+         /* Map container location and style */
         #map {
             position: relative;
             justify-content: center;
@@ -71,7 +73,7 @@
             height: 100%;
         }
   
-        /* year slider */
+        /* time slider style */
         #time-slider {
             writing-mode: horizontal-tb;
             background-color: darkgreen;
@@ -80,6 +82,7 @@
             width: 95%;
         }
 
+        /* the current year label style */
         #current-year {
             position:absolute;
             display:inline;
@@ -119,12 +122,10 @@
             background-color: lightgrey;
             opacity: 0.8;
         }
-  
         td {
             white-space: nowrap;
             font-weight: bold;
         }
-
         #cb-1:focus{
             outline: 1px ridge brown;
         }
@@ -148,5 +149,4 @@
             -ms-user-select: none;
             user-select: none;
          }
-
         
