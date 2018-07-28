@@ -75,7 +75,7 @@
         #time-slider {
             writing-mode: horizontal-tb;
             background-color: darkgreen;
-            bottom: -4;
+            bottom: -20px;
             right: 2.5%;
             width: 95%;
         }
