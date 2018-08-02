@@ -1,14 +1,28 @@
-/** 
+/**  
+ * Visualization SemB 2018 Final Project made by:
+ * Amar Moriya
+ * Fishman Stas
+ * Koifman Roman
+ */
+
+/**  
  * References
  * WorldMap with zoom slider based on http://bl.ocks.org/nivas8292/bec8b161587cb62e9fda 
  * Time Slider based on http://bl.ocks.org/cmdoptesc/fc0e318ce7992bed7ca8 
  */
 
-var minYear = 1918, maxYear = 2018;     // Define years range for the time slider.
-var currentYear = minYear;              // The curent pointed year.
+var minYear = 1918, maxYear = 2018;     // Define years range for the time slider. 
+var currentYear = minYear;              // The current pointed year.
 var comboboxes;                         // Legend's combobox group.
-var dateStringFormat = "DD/MM/YYYY";
+var dateStringFormat = "DD/MM/YYYY";    // Unified date format for all Natural Disasters.
 
+var errMsg1 = "Fatal Error: Failed loading files: ";
+var errMsg2 = "\n\nTwo possible causes:\n1. You didn't run the project within Local Server."
+    + "\n2. You moved or renamed project's data files." +
+    "\n\nCheck that data files are in correct location and run main.html from Local Server!";
+var failedFiles = [];   // Add failed loaded csv files here.
+
+/* On window resize, redrwar map, rebuild time slider, and redraw the natural disasters */
 $(window).resize(function () {
     //location.reload(true);
     drawMap();
@@ -16,11 +30,10 @@ $(window).resize(function () {
     parseAll();
 });
 
-var tooltip = d3.select("body").append("div").attr("class", "tooltip");        // create tooltip div
-
+/* Draw the map by using topojson and d3 geo */
 var center, projection, path, svg, g, height, width;
 function drawMap() {
-    $("#svg-map").remove();
+    $("#svg-map").remove();     // remove old map (for resizing)
     width = d3.select('#map').node().getBoundingClientRect().width;
     height = d3.select('#map').node().getBoundingClientRect().height;
     center = [width / 2, height / 2];
@@ -28,19 +41,25 @@ function drawMap() {
     path = d3.geo.path().projection(projection);
     svg = d3.select("#map").append("svg").attr("id", 'svg-map');
     g = svg.append("g");
+
     /* Read world map json and draw the map */
     d3.json("data/world-110m.json", async function (error, topology) {
+        if (error != null) {
+            //console.log(error);
+            failedFiles.push("data/world-110m.json");
+            return;
+        }
         g.selectAll("path")
             .data(topojson.object(topology, topology.objects.countries).geometries)
             .enter()
             .append("path")
             .attr("d", path);
     });
-    applyZoomSettings();
+    applyZoomSettings();        // apply zoom settings on current resized map.
 }
 
 /**
- * Class Phenomenon
+ * Class Phenomenon which represent a Natural Disaster
  * @param {*} type 
  * @param {*} date 
  * @param {*} time 
@@ -60,6 +79,8 @@ function Phenomenon(type, color, date, time, severity, longitude, latitude) {
         throw err;
     }
 }
+
+var tooltip = d3.select("body").append("div").attr("class", "tooltip");        // create tooltip div
 
 /* Enable ToolTip */
 function enableToolTip(text, color) {
@@ -87,6 +108,7 @@ function disableToolTip() {
 // Global arrays for Phenomenon and thier scales.
 var naturalDisasters, earthquakes, tsunami, cyclone, volcan;
 var eqScale, cScale, tScale, vScale;
+
 /**
  * Initialization function - happens once whe document fully loaded .
  * This is where we read our datasets.s
@@ -98,9 +120,11 @@ $(document).ready(function () {
     comboboxes = [$("#cb-1"), $("#cb-2"), $("#cb-3"), $("#cb-4")];
 
     /* Parse Earthquakes Data */
-    d3.csv("data/earthquakes.csv", async function (error, eqs) {
+    var fileName = "data/earthquakes.csv";
+    d3.csv(fileName, async function (error, eqs) {
         if (error != null) {
-            console.log(error);
+            //console.log(error);
+            failedFiles.push(fileName);
             return;
         }
         earthquakes = [];
@@ -117,9 +141,11 @@ $(document).ready(function () {
             }
         });
         var oldEq = [];
-        d3.csv("data/olderEarthquakes.csv", function (error, oeqs) {
+        fileName = "data/olderEarthquakes.csv";
+        d3.csv(fileName, function (error, oeqs) {
             if (error != null) {
-                console.log(error);
+                //console.log(error);
+                failedFiles.push(fileName);
                 return;
             }
             oeqs.forEach(function (e) {
@@ -138,9 +164,11 @@ $(document).ready(function () {
     }); // parse earthquakes
 
     /* Parse Tsunami data */
-    d3.csv("data/tsunami.csv", async function (error, ts) {
+    fileName = "data/tsunami.csv";
+    d3.csv(fileName, async function (error, ts) {
         if (error != null) {
-            console.log(error);
+            //console.log(error);
+            failedFiles.push(fileName);
             return;
         }
         tsunami = [];
@@ -161,10 +189,12 @@ $(document).ready(function () {
         comboboxes[1].prop("disabled", false);
     }); // parse tsunami.
 
-    /* Parse cyclone data */
-    d3.csv("data/pacific.csv", async function (error, ts) {
+    /* Parsetrophical storms  data */
+    fileName = "data/pacific.csv";
+    d3.csv(fileName, async function (error, ts) {
         if (error != null) {
-            console.log(error);
+            //console.log(error);
+            failedFiles.push(fileName);
             return;
         }
         cyclone = [];
@@ -192,9 +222,12 @@ $(document).ready(function () {
                 cyclone.push(new Phenomenon("Cyclone", "grey", dateStr, timeStr, cScale(s), lon, lat));
             }
         });
-        d3.csv("data/atlantic.csv", function (error, ts2) {
+        /* parse second file of the trophical stroms */
+        fileName = "data/atlantic.csv";
+        d3.csv(fileName, function (error, ts2) {
             if (error != null) {
-                console.log(error);
+                //console.log(error);
+                failedFiles.push(fileName);
                 return;
             }
             max = Math.max(max, d3.max(ts, function (d) { return d["Maximum Wind"]; }));
@@ -226,9 +259,11 @@ $(document).ready(function () {
     });     // cyclone data
 
     /* Parse volcanic erruptions data*/
-    d3.csv("data/volcan.csv", async function (error, volcans) {
+    fileName = "data/volcan.csv";
+    d3.csv(fileName, async function (error, volcans) {
         if (error != null) {
-            console.log(error);
+            //console.log(error);
+            failedFiles.push(fileName);
             return;
         }
         volcan = [];
@@ -249,10 +284,21 @@ $(document).ready(function () {
         });
         comboboxes[3].prop("disabled", false);
     }); // parse volcanic eruptions.
+
+    setTimeout(function () {
+        if (failedFiles.length != 0) {
+            var errMsg = errMsg1;
+            failedFiles.forEach(function (file) {
+                errMsg += file + ", ";
+            });
+            errMsg += errMsg2;
+            alert(errMsg);
+        }
+    }, 2000);
 }); // document ready
 
-
-var filtered;               // filtered phenomena by year and check box.
+/* filtered phenomena by year and check box. */
+var filtered;             
 async function parseAll() {
     svg.selectAll(".dot").remove();
 
@@ -352,8 +398,10 @@ function getTranslationString(scale, translation) {
     return "translate(" + translation + ") scale(" + scale + ")";
 }
 
+/* Apply zoom settings considering the last window resize */
 var zoom;
 function applyZoomSettings() {
+    /* The main zoom and drag event handler */
     zoom = d3.behavior.zoom()
         .scaleExtent([1, 8])
         .on("zoom", function () {
@@ -367,6 +415,7 @@ function applyZoomSettings() {
         });
     svg.call(zoom);
 
+    /* zoom in button clicked */
     d3.select('#zoom-in').on('click', function () {
         var extent = zoom.scaleExtent();
         if (zoom.scale() === extent[1]) {
@@ -375,6 +424,7 @@ function applyZoomSettings() {
         zoomerFunction(1.2, extent);
     });
 
+    /* zoom out button clicked */
     d3.select('#zoom-out').on('click', function () {
         var extent = zoom.scaleExtent();
         if (zoom.scale() === extent[0]) {
@@ -383,6 +433,7 @@ function applyZoomSettings() {
         zoomerFunction(1 / 1.2, extent);
     });
 
+    /* zoom logics for zoom in/out buttons */
     function zoomerFunction(factor, extent) {
         var scale = zoom.scale(), translate = zoom.translate();
         var x = translate[0], y = translate[1];
@@ -405,6 +456,7 @@ function applyZoomSettings() {
         d3.select("#map-zoomer").node().value = zoom.scale();
     }
 
+    /* reset zoom clicked */
     d3.select('#reset').on('click', function () {
         zoom.translate([0, 0]);
         zoom.scale(1);
@@ -418,6 +470,7 @@ function applyZoomSettings() {
         d3.select("#map-zoomer").node().value = zoom.scale();
     });
 
+    /* zoom slider logics */
     d3.select('#map-zoomer').on("change", function () {
         var scale = zoom.scale(), extent = zoom.scaleExtent(), translate = zoom.translate();
         var x = translate[0], y = translate[1];
