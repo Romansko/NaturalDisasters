@@ -330,7 +330,7 @@ async function parseAll() {
             d3.select(this).style("fill", d3.rgb(d.Color).darker(2));
             var text = "<type><font color=\"" + d.Color + "\">" + d.Type + "</font></type>";
             if (d.Date != undefined) text += "<br/>Date: " + d.Date;
-            if (d.Time != undefined) text += "<br/>Time: " + d.Time;
+            if (d.Time != undefined && d.Time != "") text += "<br/>Time: " + d.Time;
             text += "<br/>Severity: " + d.Severity.toFixed(2);
             enableToolTip(text, d.Color);
         })
