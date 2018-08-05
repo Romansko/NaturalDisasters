@@ -190,7 +190,7 @@ $(document).ready(function () {
     }); // parse tsunami.
 
     /* Parsetrophical storms  data */
-    fileName = "data/pacific.csv";
+    fileName = "data/atlantic_pacific_storms.csv";
     d3.csv(fileName, async function (error, ts) {
         if (error != null) {
             //console.log(error);
@@ -222,40 +222,33 @@ $(document).ready(function () {
                 cyclone.push(new Phenomenon("Cyclone", "grey", dateStr, timeStr, cScale(s), lon, lat));
             }
         });
-        /* parse second file of the trophical stroms */
-        fileName = "data/atlantic.csv";
-        d3.csv(fileName, function (error, ts2) {
+        fileName = "data/american_winds.csv";
+        d3.csv(fileName, async function (error, ts2) {      // add american storms
             if (error != null) {
                 //console.log(error);
                 failedFiles.push(fileName);
                 return;
             }
-            max = Math.max(max, d3.max(ts, function (d) { return d["Maximum Wind"]; }));
-            min = Math.min(min, d3.min(ts, function (d) { return d["Maximum Wind"]; }));
+            var max = d3.max(ts2, function (d) { return d["max_wind_kt"]; });
+            var min = d3.min(ts2, function (d) { return d["max_wind_kt"]; });
             cScale = d3.scale.linear().domain([min, max]).range([1, 5]);
-            ts2.forEach(function (t) {
-                var s = parseFloat(t["Maximum Wind"]);
-                var lon = parseFloat(t.Longitude.replace("W", ""));
-                var lat = parseFloat(t.Latitude.replace("N", ""));
-                if (!isNaN(s) && !isNaN(lon) && !isNaN(lat) && s > 0) {
-                    var timeStr;
-                    switch (t.Time.length) {
-                        case 4:
-                            timeStr = t.Time.substr(0, 2) + ":" + t.Time.substr(2, 4);
-                            break;
-                        case 3:
-                            timeStr = t.Time.substr(0, 1) + ":" + t.Time.substr(1, 3);
-                            break;
-                        default:
-                            timeStr = "00:00";
-                            break;
+            ts2.forEach(function (t) {              // add all coordinates 
+                var regex = /[+-]?\d+(\.\d+)?/g;
+                var str = t.track;
+                var coordinates = str.match(regex).map(function (v) { return parseFloat(v); });
+                for (var i = 0; i < coordinates.length; i += 2) {
+                    var s = parseFloat(t["max_wind_kt"]);
+                    var lat = parseFloat(coordinates[i]);
+                    var lon = parseFloat(coordinates[i + 1]);
+                    if (!isNaN(s) && !isNaN(lon) && !isNaN(lat)) {
+                        var timeStr = "";
+                        var dateStr = moment(t.year, "YYYY").format(dateStringFormat);
+                        cyclone.push(new Phenomenon("Cyclone", "grey", dateStr, timeStr, cScale(s), lon, lat));
                     }
-                    var dateStr = moment(t.Date, "YYYYMMDD").format(dateStringFormat);
-                    cyclone.push(new Phenomenon("Cyclone", "grey", dateStr, timeStr, cScale(s), lon, lat));
                 }
             });
             comboboxes[2].prop("disabled", false);
-        });
+        });     // cyclone data
     });     // cyclone data
 
     /* Parse volcanic erruptions data*/
@@ -298,7 +291,7 @@ $(document).ready(function () {
 }); // document ready
 
 /* filtered phenomena by year and check box. */
-var filtered;             
+var filtered;
 async function parseAll() {
     svg.selectAll(".dot").remove();
 
