@@ -1,6 +1,9 @@
 # NaturalDisasters
 Visualization of Natural Disasters
 
+Click to start:
+[https://romansko.github.io/NaturalDisasters](https://romansko.github.io/NaturalDisasters)
+
 To Work offline:
 
 1. Download and Install Node.js
